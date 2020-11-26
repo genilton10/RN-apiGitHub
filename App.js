@@ -1,7 +1,8 @@
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { Text, View, Image } from 'react-native';
 import styled from 'styled-components';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Pagina = styled.View`
   flex: 1;
@@ -33,7 +34,6 @@ const AreaConteudo = styled.View`
 const Busca = styled.TextInput`
   color: #fff;
   font-size: 20px;
-
 `
 const Botao = styled.TouchableOpacity``;
 
@@ -48,47 +48,55 @@ const AreaAvatar = styled.View`
 `;
 
 const Imagem = styled.Image`
-  width: 80px;
-  height: 80px%;
+  width: 80%;
+  height: 80%;
   border-radius: 10px;
 `;
 
 const App = () => {
 
-  const [nome, alteraNome] = useState('');
-  const [usuario, alteraUsuario] = useState({});
+  const [username, alteraUsername] = useState('');
+  const [user, alteraUser] = useState({});
 
-  const buscarUsuario = async () =>{
-    const requisicao = await fetch(`https://docs.github.com/rest/reference/users#get-a-user"= ${nome}`, );
-    const resultado = await requisicao.json();
-    console.log(resultado);
-    alteraUsuario(resultado);
+  const buscarUser = async () =>{
+    const requisicao = await fetch(`https://api.github.com/users/${username}`, );
+    const perfil = await requisicao.json();
+    console.log(perfil);
+    alteraUser(perfil);
+    await AsyncStorage.setItem('@img', perfil.avatar_url);
+    alteraUsername('');
   }
+  const getUsername = async () => {
+    alteraUser({avatar_url: await AsyncStorage.getItem('@img')});
+  };
+  useEffect(() =>{
+    getUsername();
+  }, []
+)
 
   return (
       <Pagina>
       <Cabecalho>
         <Busca
-          placeholder="Dig o username...."
-          value={nome}
+          placeholder="username...."
+          value={username}
           placeholderTextColor="#ccc"
-          onChangeText={(titulo) => alteraNome(titulo)}
+          onChangeText={(login) => alteraUsername(login)}
         />
-      <Botao activeOpacity ={0.3} onPress={buscarUsuario}>
+      <Botao activeOpacity ={0.3} onPress={buscarUser}>
         <Iconebuscar source={require('./src/imagens/img01.png')}/>
       </Botao>
       </Cabecalho>
       <AreaAvatar>
-        <Imagem source = {{uri:usuario.avatar_url}}/>
+        <Imagem source = {{uri:user.avatar_url}}/>
       </AreaAvatar>
       <Informacoes>
         <AreaTitulo>
-          <Titulo>{usuario.login}</Titulo>
+          <Titulo>{user.login}</Titulo>
         </AreaTitulo>
         <AreaConteudo>
-          <Text>Link: {usuario.html_url}</Text>
-          <Text>Repositorio: {usuario.repos_url}</Text>
-          <Text>Qtd Repositorios público: {usuario.public_repos}</Text>
+          <Text>Link: {user.html_url}</Text>
+          <Text>Public_repos: {user.public_repos}</Text>
         </AreaConteudo>
       </Informacoes>
       </Pagina>
